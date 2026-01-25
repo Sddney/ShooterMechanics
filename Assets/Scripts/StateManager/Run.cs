@@ -14,6 +14,12 @@ public class Run : BaseState
 
         if(movement.zInput > 0) movement.currentSpeed = movement.runSpeed;
         else if(movement.zInput < 0) movement.currentSpeed = movement.runBackSpeed;
+
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            movement.previousState = this;
+            ExitState(movement, movement.jump); 
+        }
     }
 
     void ExitState(Movement movement, BaseState state)

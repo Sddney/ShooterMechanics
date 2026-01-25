@@ -15,6 +15,12 @@ public class Walk : BaseState
 
         if(movement.zInput > 0) movement.currentSpeed = movement.walkSpeed;
         else if(movement.zInput < 0) movement.currentSpeed = movement.walkBackSpeed;
+
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            movement.previousState = this;
+            ExitState(movement, movement.jump); 
+        }
     }
 
 

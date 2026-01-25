@@ -18,5 +18,11 @@ public class Idle : BaseState
         {
             movement.ChangeState(movement.crouch);
         }
+
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            movement.previousState = this;
+            movement.ChangeState(movement.jump);
+        }
     }
 }

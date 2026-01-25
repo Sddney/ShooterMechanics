@@ -21,7 +21,7 @@ public class Movement : MonoBehaviour
     public float currentCameraY;
     public Transform shoulderOffset;
     public Transform neck;
-    public float crouchingOffset = 0.6f;
+    public float crouchingOffset = 0.7f;
     [SerializeField] float shoulderSwapSpeed = 10;
     
     public AimingBaseState currentAimState;
@@ -33,6 +33,7 @@ public class Movement : MonoBehaviour
     public float walkSpeed = 5, walkBackSpeed = 3;
     public float runSpeed = 10, runBackSpeed = 7;
     public float crouchSpeed = 3, crouchBackSpeed = 2;
+    public float airSpeed = 1.5f;
 
     Rigidbody rb;
     public Vector3 direction;
@@ -45,13 +46,17 @@ public class Movement : MonoBehaviour
     [SerializeField] LayerMask GroundLayer;
     Vector3 SpherePos;
     [SerializeField] float Gravity = -9.81f;
+    [SerializeField] float jumpForce = 10;
+    public bool jumped;
     Vector3 Velocity;
 
     public BaseState currentState;
+    public BaseState previousState;
     public Idle idle = new Idle();
     public Walk walk = new Walk();
     public Run run = new Run();
     public Crouch crouch = new Crouch();
+    public JumpState jump = new JumpState();
 
     public Transform aimPos;
     public Vector3 TrueAimPos;
@@ -74,19 +79,24 @@ public class Movement : MonoBehaviour
 
     void GetDirectionMove()
     {
-        xInput = Input.GetAxis("Horizontal");
-        zInput = Input.GetAxis("Vertical"); 
 
         Vector3 cameraForward = cameraTransform.forward;
         Vector3 cameraRight = cameraTransform.right;
         cameraForward.y = 0;
         cameraRight.y = 0;
 
+
+        xInput = Input.GetAxis("Horizontal");
+        zInput = Input.GetAxis("Vertical"); 
+        Vector3 airDirection =  Vector3.zero;
+        if(!IsGrounded()) airDirection = cameraForward * zInput + cameraRight * xInput;
+        else direction = cameraForward * zInput + cameraRight * xInput;
+
+
         cameraForward.Normalize();
         cameraRight.Normalize();
 
-        direction = cameraForward * zInput + cameraRight * xInput;
-        controller.Move(direction * currentSpeed * Time.deltaTime);
+        controller.Move((direction * currentSpeed + airDirection.normalized * airSpeed) * Time.deltaTime);
 
         if (faceMoveDirection && direction.sqrMagnitude > 0.001f)
         {
@@ -96,7 +106,7 @@ public class Movement : MonoBehaviour
 
     }
 
-    bool IsGrounded()
+    public bool IsGrounded()
     {
         SpherePos = new Vector3(transform.position.x, transform.position.y - GroundOffset, transform.position.z);
         if(Physics.CheckSphere(SpherePos, controller.radius - 0.05f, GroundLayer, QueryTriggerInteraction.Ignore)) return true;
@@ -105,10 +115,30 @@ public class Movement : MonoBehaviour
 
     void GravityForce()
     {
-        if (!IsGrounded()) Velocity.y += Gravity * Time.deltaTime;
-        else if (Velocity.y < 0) Velocity.y = 0;
-        else Velocity.y = 0;
-        controller.Move(Velocity * Time.deltaTime);
+    
+    if (IsGrounded())
+    {
+        if (Velocity.y < 0)
+            Velocity.y = -2f; 
+    }
+    else Velocity.y += Gravity * Time.deltaTime;
+    controller.Move(Velocity * Time.deltaTime);
+    }
+
+    void Falling()
+    {
+        animator.SetBool("Falling", !IsGrounded());
+    }
+
+
+    public void JumpForce()
+    {
+        Velocity.y += jumpForce;
+    }
+
+    public void Jumped()
+    {
+        jumped = true;
     }
 
     private void OnDrawGizmos()
@@ -129,6 +159,7 @@ public class Movement : MonoBehaviour
     {
        GetDirectionMove();
        GravityForce();
+       Falling();
 
        animator.SetFloat("xInput", xInput);
        animator.SetFloat("zInput", zInput);
