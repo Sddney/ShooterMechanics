@@ -11,11 +11,20 @@ public class Movement : MonoBehaviour
     public float idleFov = 60;
     public float currentFov;
     public float FovSpeed = 10;
-    public float idleCameraX = 0.27f;
+    
+    
+    public float idleCameraX;
+    public float idleCameraY;
     public float aimingCameraX = 0.9f;
+    public float aimingCameraY;
     public float currentCameraX;
+    public float currentCameraY;
     public Transform shoulderOffset;
-    AimingBaseState currentAimState;
+    public Transform neck;
+    public float crouchingOffset = 0.6f;
+    [SerializeField] float shoulderSwapSpeed = 10;
+    
+    public AimingBaseState currentAimState;
     public WithWeapon aimIdle = new WithWeapon();
     public AimState aim = new AimState();
     [SerializeField] Transform cameraTransform; 
@@ -38,7 +47,7 @@ public class Movement : MonoBehaviour
     [SerializeField] float Gravity = -9.81f;
     Vector3 Velocity;
 
-    BaseState currentState;
+    public BaseState currentState;
     public Idle idle = new Idle();
     public Walk walk = new Walk();
     public Run run = new Run();
@@ -57,6 +66,8 @@ public class Movement : MonoBehaviour
         vCam = GetComponentInChildren<CinemachineCamera>();
         idleFov = vCam.Lens.FieldOfView;
         idleCameraX = shoulderOffset.localPosition.x;
+        idleCameraY = shoulderOffset.localPosition.y;
+        aimingCameraY = idleCameraY;
         ChangeState(idle);
         ChangeAimState(aimIdle);
     }
@@ -134,6 +145,8 @@ public class Movement : MonoBehaviour
             TrueAimPos = hit.point;
         }
 
+        MoveCamera();
+
     }
     void LateUpdate()
     {
@@ -146,5 +159,20 @@ public class Movement : MonoBehaviour
     {
         currentAimState = state;
         currentAimState.EnterState(this);
+    }
+
+    void MoveCamera()
+    {
+        if(Input.GetKeyDown(KeyCode.Q)) 
+        {
+            currentCameraX = -currentCameraX;
+            aimingCameraX = -aimingCameraX;
+            idleCameraX = -idleCameraX;
+        }
+        if(currentState == crouch) aimingCameraY = crouchingOffset;
+        else aimingCameraY = idleCameraY;
+
+        Vector3 newShoulderOffset = new Vector3(idleCameraX, aimingCameraY, shoulderOffset.localPosition.z);
+        shoulderOffset.localPosition = Vector3.Lerp(shoulderOffset.localPosition, newShoulderOffset, shoulderSwapSpeed * Time.deltaTime);
     }
 }

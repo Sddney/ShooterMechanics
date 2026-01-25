@@ -19,9 +19,14 @@ public class WeaponManager : MonoBehaviour
     [SerializeField]AudioSource source;
     public AudioMixer audioMixer;
 
+    WeaponRecoil recoil;
+    WeaponBloom bloom;
+
    
     void Start()
     {
+        bloom = GetComponent<WeaponBloom>();
+        recoil = GetComponentInChildren<WeaponRecoil>();
         ammo = GetComponentInChildren<WeaponAmmo>();
         source = GetComponent<AudioSource>();
         aim = GetComponentInParent<Movement>();
@@ -43,8 +48,11 @@ public class WeaponManager : MonoBehaviour
 
         fireRateTimer = 0f;
         firePoint.LookAt(aim.TrueAimPos);
+        firePoint.localEulerAngles = bloom.BloomAngle(firePoint);
         source.PlayOneShot(gunShot);
         ammo.currentAmmo--;
+        recoil.ApplyRecoil();
+        recoil.muzzleFlash.SetActive(true);
         for(int i = 0; i < bulletPerShot; i++)
         {
             GameObject currentBullet = Instantiate(bullet, firePoint.position, firePoint.rotation); 
