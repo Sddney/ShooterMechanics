@@ -64,6 +64,7 @@ public class Movement : MonoBehaviour
     [SerializeField] LayerMask aimMask;
 
     public Animator animator;
+    public GameObject aimPoint;
     void Awake()
     {
         animator = GetComponentInChildren<Animator>();

@@ -7,6 +7,7 @@ public class WithWeapon : AimingBaseState
         aim.animator.SetBool("Aiming", false);
         aim.currentFov = aim.idleFov;
         aim.currentCameraX = aim.idleCameraX;
+        aim.aimPoint.SetActive(false);
     }
     
     public override void UpdateState(Movement aim)

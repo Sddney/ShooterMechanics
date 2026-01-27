@@ -10,10 +10,11 @@ public class ActionStateManager : MonoBehaviour
     public ActionBaseState currentState;
     public ReloadState reloadState = new ReloadState();
     public ActionDefaultState defaultState = new ActionDefaultState();
+    public SwapState swap = new SwapState();
 
-    public GameObject currentWeapon;
+    [HideInInspector] public WeaponManager currentWeapon;
     public GameObject currentWeaponManaging;
-    public WeaponAmmo ammo;
+    [HideInInspector] public WeaponAmmo ammo;
 
     public MultiAimConstraint rHandAim;
     public TwoBoneIKConstraint LHandIK;
@@ -24,7 +25,13 @@ public class ActionStateManager : MonoBehaviour
     {
         anim = GetComponent<Animator>();
         ChangeState(defaultState);
-        ammo = currentWeapon.GetComponent<WeaponAmmo>();
+    }
+
+    public void SetWeapon(WeaponManager weapon)
+    {
+        currentWeapon = weapon;
+        audioSourceReload = weapon.source;
+        ammo = weapon.ammo;
     }
     
     void Update()

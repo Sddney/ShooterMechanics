@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class ActionDefaultState : ActionBaseState
 {
+
+    public float scrollDirection;
     public override void EnterState(ActionStateManager actions)
     {
         actions.rHandAim.weight = 1;
@@ -17,6 +19,11 @@ public class ActionDefaultState : ActionBaseState
         if(Input.GetKeyDown(KeyCode.R) && CanReload(actions) == true)
         {
             actions.ChangeState(actions.reloadState);
+        }
+        else if (Input.mouseScrollDelta.y != 0)
+        {
+            scrollDirection = Input.mouseScrollDelta.y;
+            actions.ChangeState(actions.swap);
         }
     }
 

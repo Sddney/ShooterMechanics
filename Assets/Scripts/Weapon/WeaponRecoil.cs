@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class WeaponRecoil : MonoBehaviour
 {
-    [SerializeField] Transform recoilPos;
+    [HideInInspector] public Transform recoilPos;
     [SerializeField] float kickBackAmount = -1;
     [SerializeField] float kickBackSpeed = 10;
     [SerializeField] float returnSpeed = 20;

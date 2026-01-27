@@ -1,3 +1,4 @@
+using NUnit.Framework.Internal;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using UnityEngine.Audio;
@@ -12,25 +13,46 @@ public class WeaponManager : MonoBehaviour
     [SerializeField] Transform firePoint;
     [SerializeField] float bulletSpeed;
     [SerializeField] int bulletPerShot;
+    public float damage = 20;
     Movement aim;
 
     [SerializeField] AudioClip gunShot;
-    WeaponAmmo ammo;    
-    [SerializeField]AudioSource source;
+    [HideInInspector] public WeaponAmmo ammo;    
+    [HideInInspector] public AudioSource source;
     public AudioMixer audioMixer;
 
     WeaponRecoil recoil;
     WeaponBloom bloom;
 
+    public float enemyKickBack = 100f;
+
+    public Transform leftHandTarget, leftHandHint;
+
+    WeaponClassManager weaponClass;
+    ActionStateManager actions;
+
    
     void Start()
     {
+        actions = GetComponentInParent<ActionStateManager>();
         bloom = GetComponent<WeaponBloom>();
-        recoil = GetComponentInChildren<WeaponRecoil>();
-        ammo = GetComponentInChildren<WeaponAmmo>();
-        source = GetComponent<AudioSource>();
         aim = GetComponentInParent<Movement>();
         fireRateTimer = fireRate;
+    }
+
+    private void OnEnable()
+    {
+        if(weaponClass == null)
+        {
+            weaponClass = GetComponentInParent<WeaponClassManager>();
+            recoil = GetComponentInChildren<WeaponRecoil>();
+            source = GetComponent<AudioSource>();
+            ammo = GetComponentInChildren<WeaponAmmo>();
+            recoil.recoilPos = weaponClass.recoilPos;
+
+        } 
+        weaponClass.SetCurrentWeapon(this);
+
     }
 
     bool ShouldFire()
@@ -38,6 +60,8 @@ public class WeaponManager : MonoBehaviour
         fireRateTimer += Time.deltaTime;
         if (fireRateTimer <= fireRate) return false; 
         if(ammo.currentAmmo == 0) return false;
+        if(actions.currentState == actions.reloadState) return false;
+        if(actions.currentState == actions.swap) return false;
         if(semiAuto && Input.GetMouseButtonDown(0)) return true;
         if(!semiAuto && Input.GetMouseButton(0)) return true;
         return false;
@@ -56,6 +80,12 @@ public class WeaponManager : MonoBehaviour
         for(int i = 0; i < bulletPerShot; i++)
         {
             GameObject currentBullet = Instantiate(bullet, firePoint.position, firePoint.rotation); 
+
+            Bullet bulletScript = currentBullet.GetComponent<Bullet>();
+            bulletScript.weapon = this;
+
+            bulletScript.direction = firePoint.transform.forward;
+
             Rigidbody rb = currentBullet.GetComponent<Rigidbody>();
             rb.AddForce(firePoint.forward * bulletSpeed, ForceMode.Impulse);
         }
@@ -65,6 +95,5 @@ public class WeaponManager : MonoBehaviour
     void Update() 
     {
         if (ShouldFire()) Fire();
-        Debug.Log(ammo.currentAmmo);
     }
 }
