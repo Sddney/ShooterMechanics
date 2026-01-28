@@ -36,11 +36,6 @@ public class WeaponAmmo : MonoBehaviour
                 reserveAmmo = 0;
             } 
         }
-    }
-
-    private void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.R)) Reload();
-        
+        Debug.Log("Realoded");
     }
 }

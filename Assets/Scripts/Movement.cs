@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Cinemachine;
+using UnityEngine.Animations.Rigging;
 using System;
 using UnityEngineInternal;
 
@@ -7,8 +8,10 @@ public class Movement : MonoBehaviour
 {
 
     public CinemachineCamera vCam;
+    CinemachineOrbitalFollow orbital;
+
     public float aimingFov = 20;
-    public float idleFov = 60;
+    public float idleFov = 40;
     public float currentFov;
     public float FovSpeed = 10;
     
@@ -58,24 +61,54 @@ public class Movement : MonoBehaviour
     public Crouch crouch = new Crouch();
     public JumpState jump = new JumpState();
 
-    public Transform aimPos;
+    [HideInInspector]public Transform aimPos;
     public Vector3 TrueAimPos;
     [SerializeField] float aimSpeed = 20;
     [SerializeField] LayerMask aimMask;
 
     public Animator animator;
     public GameObject aimPoint;
+    [HideInInspector] WeaponManager weapon;
+    [SerializeField] float idleLookDistance = 50f;
+
+    [SerializeField] float maxAim = 100f; 
+    float lastValidXAxis;
+    float lastValidYaw;
+
+
+    MultiAimConstraint[] multiAims;
+    WeightedTransform aimPosWeightedTransform;
+
     void Awake()
     {
         animator = GetComponentInChildren<Animator>();
         controller = GetComponent<CharacterController>();
         vCam = GetComponentInChildren<CinemachineCamera>();
+        weapon = GetComponentInChildren<WeaponManager>();
+        
+        orbital = vCam.GetComponent<CinemachineOrbitalFollow>();
         idleFov = vCam.Lens.FieldOfView;
         idleCameraX = shoulderOffset.localPosition.x;
         idleCameraY = shoulderOffset.localPosition.y;
         aimingCameraY = idleCameraY;
         ChangeState(idle);
         ChangeAimState(aimIdle);
+
+        aimPos = new GameObject().transform;
+        aimPos.name = "AimPosition";
+
+        aimPosWeightedTransform.transform = aimPos;
+        aimPosWeightedTransform.weight = 1;
+
+        multiAims = GetComponentsInChildren<MultiAimConstraint>();
+
+        foreach(MultiAimConstraint multiAim in multiAims)
+        {
+            var data = multiAim.data.sourceObjects;
+            data.Clear();
+            data.Add(aimPosWeightedTransform);
+            multiAim.data.sourceObjects = data; 
+        }
     }
 
     void GetDirectionMove()
@@ -149,10 +182,53 @@ public class Movement : MonoBehaviour
         Gizmos.DrawSphere(SpherePos, controller.radius - 0.05f);
     }
 
-    public void ChangeState(BaseState newState)
+
+
+    private float GetCameraAngle()
     {
-        currentState = newState;
-        currentState.EnterState(this);
+        Vector3 camForward = cameraTransform.forward;
+        Vector3 playerForward = transform.forward;
+
+        camForward.y = 0;
+        playerForward.y = 0;
+
+        camForward.Normalize();
+        playerForward.Normalize();
+
+        return Vector3.SignedAngle(playerForward, camForward, Vector3.up);
+    }
+
+    private Vector3 GetAllowedAimDirection(float angle)
+    {
+        
+        float clampedAngle = Mathf.Clamp(angle, -maxAim, maxAim);
+        return Quaternion.AngleAxis(clampedAngle, Vector3.up) * transform.forward;
+    }
+    
+    
+    private void ClampCameraYaw(float angle)
+    {
+        
+        float yaw = orbital.HorizontalAxis.Value;
+
+    
+        if (Mathf.Abs(angle) < maxAim)
+            {
+                
+                lastValidYaw = yaw;
+                return;
+            }
+
+    
+            if ((angle > maxAim && yaw < lastValidYaw) || (angle < -maxAim && yaw > lastValidYaw))
+            {
+                
+                lastValidYaw = yaw;
+                return;
+            }
+
+        
+        orbital.HorizontalAxis.Value = lastValidYaw;
     }
 
 
@@ -170,11 +246,34 @@ public class Movement : MonoBehaviour
        currentAimState.UpdateState(this);
        Vector2 screenCentre = new Vector2(Screen.width/2, Screen.height/2);
        Ray ray = Camera.main.ScreenPointToRay(screenCentre);
+       
 
-       if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, aimMask))
+       if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, aimMask) && currentAimState == aim)
         {
-            aimPos.position = Vector3.Lerp(aimPos.position, hit.point, aimSpeed * Time.deltaTime);
-            TrueAimPos = hit.point;
+            float angle = GetCameraAngle();
+            if(Mathf.Abs(angle) > maxAim)
+            {
+                   
+                    Vector3 allowedDir = GetAllowedAimDirection(angle);
+                    Vector3 allowedPoint = transform.position + allowedDir * Vector3.Distance(transform.position, hit.point);
+
+                    aimPos.position = Vector3.Lerp(aimPos.position, allowedPoint, aimSpeed * Time.deltaTime);
+                    
+                    TrueAimPos = allowedPoint;
+            }
+            else 
+                {
+                    aimPos.position = Vector3.Lerp(aimPos.position, hit.point, aimSpeed * Time.deltaTime);
+                    TrueAimPos = hit.point;
+                }
+            ClampCameraYaw(angle);
+        }
+        else if (currentAimState == aimIdle)
+        {
+            
+            Vector3 forwardPoint = transform.position + transform.forward * idleLookDistance;
+            aimPos.position = Vector3.Slerp(aimPos.position, forwardPoint, aimSpeed * Time.deltaTime);
+            TrueAimPos = forwardPoint;
         }
 
         MoveCamera();
@@ -182,6 +281,7 @@ public class Movement : MonoBehaviour
     }
     void LateUpdate()
     {
+    
        vCam.Lens.FieldOfView = Mathf.Lerp(vCam.Lens.FieldOfView, currentFov, FovSpeed * Time.deltaTime);
        shoulderOffset.localPosition = new Vector3(Mathf.Lerp(shoulderOffset.localPosition.x, currentCameraX, FovSpeed * Time.deltaTime), 
         shoulderOffset.localPosition.y, shoulderOffset.localPosition.z); 
@@ -192,7 +292,11 @@ public class Movement : MonoBehaviour
         currentAimState = state;
         currentAimState.EnterState(this);
     }
-
+    public void ChangeState(BaseState newState)
+    {
+        currentState = newState;
+        currentState.EnterState(this);
+    }
     void MoveCamera()
     {
         if(Input.GetKeyDown(KeyCode.Q)) 

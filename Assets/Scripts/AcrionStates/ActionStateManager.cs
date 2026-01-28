@@ -24,6 +24,7 @@ public class ActionStateManager : MonoBehaviour
     void Start()
     {
         anim = GetComponent<Animator>();
+        anim.Update(0f);
         ChangeState(defaultState);
     }
 
@@ -41,6 +42,7 @@ public class ActionStateManager : MonoBehaviour
 
     public void ChangeState(ActionBaseState newState)
     {
+        
         currentState = newState;
         currentState.EnterState(this);
     }

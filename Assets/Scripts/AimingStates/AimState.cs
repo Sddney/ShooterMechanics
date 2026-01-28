@@ -10,6 +10,7 @@ public class AimState : AimingBaseState
         aim.currentFov = aim.aimingFov;
         aim.currentCameraX = aim.aimingCameraX;
         aim.aimPoint.SetActive(true);
+        
     }
     
     public override void UpdateState(Movement aim)

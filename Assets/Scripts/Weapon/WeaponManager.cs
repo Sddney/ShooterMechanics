@@ -10,7 +10,7 @@ public class WeaponManager : MonoBehaviour
     [SerializeField] bool semiAuto;
 
     [SerializeField] GameObject bullet;
-    [SerializeField] Transform firePoint;
+    public Transform firePoint;
     [SerializeField] float bulletSpeed;
     [SerializeField] int bulletPerShot;
     public float damage = 20;
