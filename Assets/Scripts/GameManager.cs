@@ -4,6 +4,8 @@ using Unity.VisualScripting;
 
 public class GameManager : MonoBehaviour
 {
+    public Transform playerHead;
+    
 
     void Awake()
     {
