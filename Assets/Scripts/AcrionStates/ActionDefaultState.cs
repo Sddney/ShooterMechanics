@@ -43,7 +43,7 @@ public class ActionDefaultState : ActionBaseState
     {
          
         if(actions.ammo.currentAmmo == actions.ammo.clipSize) return false;
-        if(actions.ammo.reserveAmmo == 0) return false;
+        //if(actions.ammo.reserveAmmo == 0) return false;
         return true;
 
     }

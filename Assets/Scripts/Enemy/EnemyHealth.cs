@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -10,22 +11,27 @@ public class EnemyHealth : MonoBehaviour
     [HideInInspector] public bool isDead;
     [HideInInspector] Animator animator;
     [HideInInspector] EnemyMovement enemyMovement;
+    [HideInInspector] EnemyCount enemyCounter;
 
     private void Start()
     {
         animator = GetComponent<Animator>();
         enemyMovement = GetComponent<EnemyMovement>();
         ragdollManager = GetComponent<RagdollManager>();
+        enemyCounter = GameObject.FindGameObjectWithTag("EnemyCounter").GetComponent<EnemyCount>();
     }
 
    public void TakeDamage(float damage)
     {
-        if (health > 0)
+        if(isDead) return;
+        health -= damage;
+        Debug.Log(health);
+        
+        if (health <= 0)
         {
-            health -= damage;
-            Debug.Log(health);
-        }
-        else if (health <= 0) EnemyDeath();
+            isDead = true;
+            EnemyDeath(); 
+        } 
     }
 
     void EnemyDeath()
@@ -33,7 +39,8 @@ public class EnemyHealth : MonoBehaviour
         animator.enabled = false;
         enemyMovement.agent.speed = 0;
         ragdollManager.EnableRagdoll();
-        Debug.Log("Enemy Dead");
+        enemyCounter.enemyCount++;
+        isDead = true;
         Destroy(gameObject, 10f);
     }
 }
