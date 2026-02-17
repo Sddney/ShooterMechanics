@@ -13,7 +13,7 @@ public class EnemyMovement : MonoBehaviour
     TowersHealth health;
     EnemyHealth enemyHealth;
     int enemySpeed = 6;
-    [SerializeField] int damage = 20;
+    [SerializeField] int damage = 5;
     [HideInInspector] Transform tower;
 
     //states
@@ -35,7 +35,7 @@ public class EnemyMovement : MonoBehaviour
     void Start()
         {
             if (towers == null)
-                towers = FindAnyObjectByType<Towers>();
+                towers = GameObject.FindGameObjectWithTag("Towers").GetComponent<Towers>();
 
             if (towers != null)
             {
@@ -84,16 +84,11 @@ public class EnemyMovement : MonoBehaviour
             animator.SetTrigger("Punch");
         }
         else 
-        { 
-            if(towers.towers.All(obj => obj == null)) 
-            {
-                animator.SetTrigger("spotPlayer");
-                return;
-            }
+        {
+            PickDestination();
             agent.speed = enemySpeed;
             agent.updateRotation = true;
             ChangeState(defaultState);
-            PickDestination();
         } 
 
     }
@@ -107,7 +102,14 @@ public class EnemyMovement : MonoBehaviour
 
     void PickDestination()
     {
-        agent.SetDestination(towers.GetFinalDestination());
+        if(towers.towers.Count == 0)
+        {
+            animator.SetTrigger("spotPlayer");
+            agent.ResetPath();
+            agent.isStopped = true;
+            return;
+        }
+        else agent.SetDestination(towers.GetFinalDestination());
     }
 
     public void Atack()

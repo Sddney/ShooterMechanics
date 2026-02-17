@@ -12,16 +12,17 @@ public class TowersHealth : MonoBehaviour
     {
         mesh = GetComponent<MeshRenderer>();
         boxCollider = GetComponent<BoxCollider>();
+        towers = GameObject.FindGameObjectWithTag("Towers").GetComponent<Towers>();
     }
 
     void Update()
     {
         if (health <= 0)
         {
-            mesh.enabled = false;
-            boxCollider.enabled = false;
-            int idx = Array.IndexOf(towers.towers, gameObject);
-            if (idx >= 0) towers.towers[idx] = null;
+            //mesh.enabled = false;
+            //boxCollider.enabled = false;
+            towers.towers.Remove(gameObject);
+            Destroy(gameObject);
         }
     }
 }

@@ -1,40 +1,43 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Linq;
+using System.Collections.Generic;
 
 public class Towers : MonoBehaviour
 {
 
-    public GameObject[] towers;
+    [HideInInspector] public List<GameObject> towers = new List<GameObject>();
+    [SerializeField] GameObject towerPrefab;
+    [SerializeField] Transform[] spawnLocations;
     public int index;
     [SerializeField] GameObject enemy;
     Animator anim;
+    [HideInInspector] public bool spawned = false;
+    [SerializeField] UIDisplay ui;
     void Start()
     {
         anim = enemy.GetComponent<Animator>();
+        SpawnTower();
+    }
+
+    void SpawnTower()
+    {
+        for(int i = 0; i < spawnLocations.Length; i++)
+        {
+            GameObject t = Instantiate(towerPrefab, spawnLocations[i].position, Quaternion.identity);
+            towers.Add(t);
+
+            ui.towersHealth.Add(t.GetComponent<TowersHealth>());
+        }
     }
     public Vector3 GetFinalDestination()
-    {
-        index = Random.Range(0, towers.Length);
-        if(towers.All(obj => obj == null)) return enemy.transform.position;
-        
-        
-        int safe = 0;
-        do
-        {
-            index = Random.Range(0, towers.Length);
-            safe++;
-        }
-        while(towers[index] == null && safe < 100);
-        if(towers[index] == null)
-        {
-            anim.SetTrigger("spotPlayer");
-            return enemy.transform.position;
-        }
-            NavMeshHit hit;
-            Vector3 finalPosition = towers[index].transform.position;
-            if(NavMesh.SamplePosition(towers[index].transform.position, out hit, 4f, 1)) finalPosition = hit.position;
-            return finalPosition;
+    {   
+        index = Random.Range(0, towers.Count);
+        NavMeshHit hit;
+        Vector3 finalPosition = towers[index].transform.position;
+        if(NavMesh.SamplePosition(towers[index].transform.position, out hit, 4f, 1)) finalPosition = hit.position;
+        return finalPosition;
+
         
     }
 }
