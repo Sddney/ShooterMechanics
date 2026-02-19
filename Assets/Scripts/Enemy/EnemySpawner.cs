@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -7,17 +8,22 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] Transform pos1, pos2;
     public int maxEnemy = 15;
 
-    [SerializeField] EnemyHealth enemyHealth;
+    //EnemyHealth enemyHealth;
+
+    public List<GameObject> enemyList = new List<GameObject>();
     
     void Update()
     {
         spawnInterval -= Time.deltaTime;
         if (spawnInterval <= 0)
         {
-            Instantiate(enemyPrefab, pos1.position, Quaternion.identity);
-            Instantiate(enemyPrefab, pos2.position, Quaternion.identity);
+            GameObject enemy1 = Instantiate(enemyPrefab, pos1.position, Quaternion.identity);
+            GameObject enemy2 = Instantiate(enemyPrefab, pos2.position, Quaternion.identity);
             
             spawnInterval = 5;
+
+            enemyList.Add(enemy1);
+            enemyList.Add(enemy2);
         }
         
     }

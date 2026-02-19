@@ -15,6 +15,8 @@ public class EnemyMovement : MonoBehaviour
     int enemySpeed = 6;
     [SerializeField] int damage = 5;
     [HideInInspector] Transform tower;
+    GameObject currentTarget;
+
 
     //states
     public EnemyBaseState currentState;
@@ -43,8 +45,7 @@ public class EnemyMovement : MonoBehaviour
                 ChangeState(defaultState);
             }
         }
-
-
+  
     public void ChangeState(EnemyBaseState newState)
     {
         currentState = newState;
@@ -59,6 +60,7 @@ public class EnemyMovement : MonoBehaviour
     void Update()
     {
         if (currentState != null) currentState.UpdateState(this);
+        if(currentTarget == null) PickDestination();
         //if (detection.PlayerSeen()) ChasePlayer();
         //else PickDestination();
     }
@@ -107,9 +109,21 @@ public class EnemyMovement : MonoBehaviour
             animator.SetTrigger("spotPlayer");
             agent.ResetPath();
             agent.isStopped = true;
+            //health = towers.towers[towers.index].GetComponent<TowersHealth>();
+            currentTarget = null;
             return;
         }
-        else agent.SetDestination(towers.GetFinalDestination());
+        int randomIndex = Random.Range(0, towers.towers.Count);
+        currentTarget = towers.towers[randomIndex];
+
+        NavMeshHit hit;
+        Vector3 finalPosition = currentTarget.transform.position;
+
+        if (NavMesh.SamplePosition(finalPosition, out hit, 4f, 1))
+            finalPosition = hit.position;
+
+        agent.isStopped = false;
+        agent.SetDestination(finalPosition);
     }
 
     public void Atack()
@@ -121,4 +135,5 @@ public class EnemyMovement : MonoBehaviour
     {
         return health.health > 0 && enemyHealth.health > 0;
     }
+
 }

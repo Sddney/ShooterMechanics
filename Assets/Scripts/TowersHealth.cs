@@ -7,6 +7,7 @@ public class TowersHealth : MonoBehaviour
     private MeshRenderer mesh;
     [SerializeField] Towers towers;
     [HideInInspector] BoxCollider boxCollider;
+    public bool towerDead = false;
 
     void Start()
     {
@@ -19,8 +20,8 @@ public class TowersHealth : MonoBehaviour
     {
         if (health <= 0)
         {
-            //mesh.enabled = false;
-            //boxCollider.enabled = false;
+            mesh.enabled = false;
+            boxCollider.enabled = false;
             towers.towers.Remove(gameObject);
             Destroy(gameObject);
         }
