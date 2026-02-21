@@ -12,8 +12,8 @@ public class EnemyMovement : MonoBehaviour
     public GameObject player;
     TowersHealth health;
     EnemyHealth enemyHealth;
-    int enemySpeed = 6;
-    [SerializeField] int damage = 5;
+    int enemySpeed = 2;
+    [SerializeField] int damage = 10;
     [HideInInspector] Transform tower;
     GameObject currentTarget;
 
