@@ -31,9 +31,4 @@ public class ContinueGameButton : MonoBehaviour
         towers = GameObject.FindGameObjectWithTag("Towers").GetComponent<Towers>();
         winGame = GameObject.FindGameObjectWithTag("UIManager").GetComponent<WinGame>();
     }
-
-    void Update()
-    {
-        
-    }
 }

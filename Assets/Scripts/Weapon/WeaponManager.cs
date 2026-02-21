@@ -30,7 +30,7 @@ public class WeaponManager : MonoBehaviour
 
     WeaponClassManager weaponClass;
     ActionStateManager actions;
-
+    [SerializeField] PauseGame pause;
    
     void Start()
     {
@@ -64,6 +64,7 @@ public class WeaponManager : MonoBehaviour
         if(actions.currentState == actions.swap) return false;
         if(semiAuto && Input.GetMouseButtonDown(0)) return true;
         if(!semiAuto && Input.GetMouseButton(0)) return true;
+        if(pause.isPaused) return false;
         return false;
     }
 

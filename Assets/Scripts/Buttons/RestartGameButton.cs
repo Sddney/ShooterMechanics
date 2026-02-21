@@ -9,6 +9,7 @@ public class RestartGameButton : MonoBehaviour
     [SerializeField] EnemySpawner enemySpawner;
     public void RestartGame()
     {
+        towers.DestroyTowers();
         Time.timeScale = 1;
         gameOverScreen.SetActive(false);
         Cursor.lockState = CursorLockMode.Locked;
